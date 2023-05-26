@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <string.h>
+void message();
 int main(void)
 {
     char s1[80], s2[80];
+    int array[50];
     gets_s(s1,80);
     gets_s(s2,80);
     printf("lengths: %llu %llu \n", strlen(s1), strlen(s2));
@@ -17,4 +19,7 @@ int main(void)
     if (strstr("hi there", "hi"))
         printf_s("found hi");
     return 0;
+}
+void message(){
+    printf_s("%s","Hello world");
 }
