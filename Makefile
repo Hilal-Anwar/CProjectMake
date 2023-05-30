@@ -1,49 +1,103 @@
-# Requires the following project directory structure:
-#  /bin
-#  /obj
-#  /src
+# Helal anwar
+# May 30 2023
 
-# Use 'make remove' to clean up the hole project
+# A generic build template for C/C++ programs
+# Thanks to Thomas Daley(https://gist.github.com/tomdaley92/190c68e8a84038cc91a5459409e007df)
+# executable name
+EXE = app
 
-# Name of target file
-TARGET     = final
+# C compiler
+CC = clang
+# C++ compiler
+CXX = clang++
+# linker
+LD = clang++
 
-CC         = clang
-CXX        = clang++
-CXXFLAGS   = -std=c++2b \
-             -Weverything -Wall -Wextra  -Wpointer-arith -Wcast-qual \
-             -Wno-missing-braces -Wempty-body -Wno-error=uninitialized \
-             -Wno-error=deprecated-declarations \
-             -pedantic-errors -pedantic \
-             -Os
+# C flags
+CFLAGS = -std=c2x
+# C++ flags
+CXXFLAGS = -std=c++2b
+# C/C++ flags
+CPPFLAGS = -Wall
+# dependency-generation flags
+DEPFLAGS = -MMD -MP
+# linker flags
+LDFLAGS = 
+# library flags
+LDLIBS = 
 
-LD         = clang++ -o
-LDFLAGS    = -Wall -pedantic
+# build directories
+BIN = bin
+OBJ = obj
+SRC = src
 
-SRCDIR     = src
-OBJDIR     = obj
-BINDIR     = bin
+SOURCES := $(wildcard $(SRC)/*.c $(SRC)/*.cc $(SRC)/*.cpp $(SRC)/*.cxx)
 
-SOURCES   := $(wildcard $(SRCDIR)/*.cpp)
-INCLUDES  := $(wildcard $(SRCDIR)/*.h)
-OBJECTS   := $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+OBJECTS := \
+	$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(wildcard $(SRC)/*.c)) \
+	$(patsubst $(SRC)/%.cc, $(OBJ)/%.o, $(wildcard $(SRC)/*.cc)) \
+	$(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(wildcard $(SRC)/*.cpp)) \
+	$(patsubst $(SRC)/%.cxx, $(OBJ)/%.o, $(wildcard $(SRC)/*.cxx))
 
-RM         = rm -f
+# include compiler-generated dependency rules
+DEPENDS := $(OBJECTS:.o=.d)
 
-$(BINDIR)/$(TARGET): $(OBJECTS)
-	@$(LD) $@ $(LDFLAGS) $(OBJECTS)
-	@echo "Linking complete!"
+# compile C source
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@
+# compile C++ source
+COMPILE.cxx = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c -o $@
+# link objects
+LINK.o = $(LD) $(LDFLAGS) $(LDLIBS) $(OBJECTS) -o $@
 
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
-	@echo "Compiled "$<" successfully!"
+.DEFAULT_GOAL = all
 
+.PHONY: all
+all: $(BIN)/$(EXE)
+
+$(BIN)/$(EXE): $(SRC) $(OBJ) $(BIN) $(OBJECTS)
+	$(LINK.o)
+
+$(SRC):
+	mkdir -p $(SRC)
+
+$(OBJ):
+	mkdir -p $(OBJ)
+
+$(BIN):
+	mkdir -p $(BIN)
+
+$(OBJ)/%.o:	$(SRC)/%.c
+	$(COMPILE.c) $<
+
+$(OBJ)/%.o:	$(SRC)/%.cc
+	$(COMPILE.cxx) $<
+
+$(OBJ)/%.o:	$(SRC)/%.cpp
+	$(COMPILE.cxx) $<
+
+$(OBJ)/%.o:	$(SRC)/%.cxx
+	$(COMPILE.cxx) $<
+
+# force rebuild
+.PHONY: remake
+remake:	clean $(BIN)/$(EXE)
+
+# execute the program
+.PHONY: run
+run: $(BIN)/$(EXE)
+	./$(BIN)/$(EXE)
+
+# remove previous build and objects
 .PHONY: clean
 clean:
-	@$(RM) $(OBJECTS)
-	@echo "Cleanup complete!"
+	$(RM) $(OBJECTS)
+	$(RM) $(DEPENDS)
+	$(RM) $(BIN)/$(EXE)
 
-.PHONY: remove
-remove: clean
-	@$(RM) $(BINDIR)/$(TARGET)
-	@echo "Executable removed!"
+# remove everything except source
+.PHONY: reset
+reset:
+	$(RM) -r $(OBJ)
+	$(RM) -r $(BIN)
+
+-include $(DEPENDS)

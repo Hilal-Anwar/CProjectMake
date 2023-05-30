@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 void message();
-int main(void)
+int string_fun();
+int string_fun()
 {
     char s1[80], s2[80];
     int array[50];

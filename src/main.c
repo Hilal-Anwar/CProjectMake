@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 int main(int arg,char const *args[]) {
     int a, b, c;
@@ -13,4 +14,3 @@ int main(int arg,char const *args[]) {
     }
     return 0;
 }
-
