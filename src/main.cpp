@@ -14,5 +14,6 @@ int main(int arg,char const *args[]) {
         printf_s("%s \n",args[i]);
     }
     _generatePython_triplet(3, 20000000);
+    _generatePython_triplet(3, 200000);
     return 0;
 }
